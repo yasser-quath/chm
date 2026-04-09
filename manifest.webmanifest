@@ -1,0 +1,21 @@
+{
+  "name": "BusRouteWidget Web",
+  "short_name": "BusRouteWidget",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#0f766e",
+  "description": "Save and refresh bus-only route checks from the Google Routes API.",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./assets/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}
