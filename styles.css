@@ -74,14 +74,14 @@ h1 {
   line-height: 1.35;
 }
 
-.route-duration {
+.route-times {
   margin-top: 6px;
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--text);
 }
 
-.route-duration.muted {
+.route-times.muted {
   color: var(--muted);
   font-size: 1rem;
   font-weight: 500;

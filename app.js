@@ -28,7 +28,9 @@ const FIELD_MASK = [
   "routes.duration",
   "routes.localizedValues.duration",
   "routes.legs.steps.travelMode",
-  "routes.legs.steps.transitDetails.transitLine.vehicle.type"
+  "routes.legs.steps.transitDetails.transitLine.vehicle.type",
+  "routes.legs.steps.transitDetails.stopDetails.departureTime",
+  "routes.legs.steps.transitDetails.stopDetails.arrivalTime"
 ].join(",");
 
 const ACCEPTED_BUS_VEHICLE_TYPES = new Set([
@@ -80,12 +82,12 @@ function render() {
     const fragment = elements.routeRowTemplate.content.cloneNode(true);
     const snapshot = state.snapshots[route.id] ?? emptySnapshot();
     const title = fragment.querySelector(".route-title");
-    const duration = fragment.querySelector(".route-duration");
+    const times = fragment.querySelector(".route-times");
     const refreshButton = fragment.querySelector(".route-refresh-button");
 
     title.textContent = route.title;
-    duration.textContent = displayValue(snapshot);
-    duration.classList.toggle("muted", snapshot.status !== "busRouteFound");
+    times.textContent = displayValue(snapshot);
+    times.classList.toggle("muted", snapshot.status !== "busRouteFound");
 
     refreshButton.disabled = state.refreshing.has(route.id);
     refreshButton.textContent = state.refreshing.has(route.id) ? "Updating..." : "Update";
@@ -98,7 +100,9 @@ function render() {
 function displayValue(snapshot) {
   switch (snapshot.status) {
     case "busRouteFound":
-      return snapshot.totalDurationText ?? "--";
+      return snapshot.departureTimeText && snapshot.arrivalTimeText
+        ? `${snapshot.departureTimeText} -> ${snapshot.arrivalTimeText}`
+        : snapshot.totalDurationText ?? "--";
     case "noBusOnlyRoute":
       return "No bus";
     case "error":
@@ -142,6 +146,8 @@ async function refreshRoute(routeId, rerender = true) {
     state.snapshots[routeId] = {
       status: "error",
       totalDurationText: null,
+      departureTimeText: null,
+      arrivalTimeText: null,
       errorMessage: error instanceof Error ? error.message : "Unexpected error"
     };
   }
@@ -194,6 +200,8 @@ function normalizeRoutesResponse(data) {
     return {
       status: "busRouteFound",
       totalDurationText: match.totalDurationText,
+      departureTimeText: match.departureTimeText,
+      arrivalTimeText: match.arrivalTimeText,
       errorMessage: null
     };
   }
@@ -202,6 +210,8 @@ function normalizeRoutesResponse(data) {
     return {
       status: "noBusOnlyRoute",
       totalDurationText: null,
+      departureTimeText: null,
+      arrivalTimeText: null,
       errorMessage: null
     };
   }
@@ -209,6 +219,8 @@ function normalizeRoutesResponse(data) {
   return {
     status: "error",
     totalDurationText: null,
+    departureTimeText: null,
+    arrivalTimeText: null,
     errorMessage: "No route returned"
   };
 }
@@ -217,6 +229,8 @@ function normalizeRoute(route) {
   const steps = (route.legs ?? []).flatMap((leg) => leg.steps ?? []);
   let isBusOnly = true;
   let busSegments = 0;
+  let departureTime = null;
+  let arrivalTime = null;
 
   for (const step of steps) {
     const travelMode = step.travelMode || "";
@@ -233,6 +247,12 @@ function normalizeRoute(route) {
     busSegments += 1;
 
     const vehicleType = step.transitDetails?.transitLine?.vehicle?.type || "";
+    if (!departureTime) {
+      departureTime = step.transitDetails?.stopDetails?.departureTime || null;
+    }
+    if (step.transitDetails?.stopDetails?.arrivalTime) {
+      arrivalTime = step.transitDetails.stopDetails.arrivalTime;
+    }
     if (!ACCEPTED_BUS_VEHICLE_TYPES.has(vehicleType)) {
       isBusOnly = false;
     }
@@ -244,7 +264,9 @@ function normalizeRoute(route) {
 
   return {
     isBusOnly,
-    totalDurationText: route.localizedValues?.duration?.text || formatDuration(route.duration)
+    totalDurationText: route.localizedValues?.duration?.text || formatDuration(route.duration),
+    departureTimeText: formatClockTime(departureTime),
+    arrivalTimeText: formatClockTime(arrivalTime)
   };
 }
 
@@ -273,6 +295,8 @@ function emptySnapshot() {
   return {
     status: "idle",
     totalDurationText: null,
+    departureTimeText: null,
+    arrivalTimeText: null,
     errorMessage: null
   };
 }
@@ -295,6 +319,17 @@ function formatDuration(durationString) {
   }
 
   return `${minutes} min`;
+}
+
+function formatClockTime(value) {
+  if (!value) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }
 
 function registerServiceWorker() {
