@@ -1,6 +1,6 @@
 # BusRouteWidget Web
 
-Minimal web version of the bus route checker.
+I made this project to make it easier for me to go to school without wasting time waiting. I wanted something fast to access, minimal, and focused only on what I actually need instead of more complex apps that are built around money or too many extra features.
 
 ## UI
 
