@@ -3,190 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="BusRouteWidget">
-  <title>BusRouteWidget Web</title>
+  <title>BusRouteWidget</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./assets/apple-touch-icon.svg">
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Live bus route checker</p>
-        <h1>BusRouteWidget Web</h1>
-        <p class="hero-copy">
-          Save favorite routes, validate bus-only transit results from the Google Routes API, and refresh them live from your iPhone browser.
-        </p>
-      </div>
-      <div class="hero-actions">
-        <button id="refresh-all-button" class="button primary">Refresh all</button>
-        <button id="install-help-button" class="button secondary">iPhone install help</button>
-      </div>
+  <main class="app-shell">
+    <header class="topbar">
+      <h1>BusRouteWidget</h1>
+      <button id="refresh-all-button" class="button">Update all</button>
     </header>
 
-    <main class="layout">
-      <section class="panel settings-panel">
-        <div class="panel-header">
-          <div>
-            <h2>Google API</h2>
-            <p class="panel-subtitle">Stored only in this browser.</p>
-          </div>
-          <span id="api-status-badge" class="badge muted">Missing key</span>
-        </div>
+    <section id="routes-list" class="routes-list"></section>
+  </main>
 
-        <form id="api-key-form" class="stack">
-          <label class="field">
-            <span>Google Routes API key</span>
-            <input id="api-key-input" name="apiKey" type="password" placeholder="Paste your Google Routes API key">
-          </label>
-          <div class="button-row">
-            <button type="submit" class="button primary">Save key</button>
-            <button id="clear-key-button" type="button" class="button ghost">Clear key</button>
-          </div>
-          <p class="help-text">
-            Restrict this key to your GitHub Pages domain in Google Cloud if possible.
-          </p>
-        </form>
-
-        <hr>
-
-        <div class="panel-header">
-          <div>
-            <h2>Auto refresh</h2>
-            <p class="panel-subtitle">Real-time here means live polling while the page is open.</p>
-          </div>
-        </div>
-
-        <form id="refresh-settings-form" class="stack">
-          <label class="toggle-row">
-            <span>Enable auto refresh</span>
-            <input id="auto-refresh-toggle" type="checkbox">
-          </label>
-
-          <label class="field">
-            <span>Refresh interval</span>
-            <select id="refresh-interval-select">
-              <option value="60">Every 1 minute</option>
-              <option value="300" selected>Every 5 minutes</option>
-              <option value="900">Every 15 minutes</option>
-              <option value="1800">Every 30 minutes</option>
-            </select>
-          </label>
-
-          <p id="next-refresh-label" class="help-text">Auto refresh is off.</p>
-        </form>
-      </section>
-
-      <section class="panel editor-panel">
-        <div class="panel-header">
-          <div>
-            <h2 id="editor-title">Add favorite route</h2>
-            <p class="panel-subtitle">Bus-only validation allows walking, but rejects rail and other non-bus transit.</p>
-          </div>
-        </div>
-
-        <form id="route-form" class="stack">
-          <input id="route-id-input" type="hidden">
-
-          <label class="field">
-            <span>Route title</span>
-            <input id="route-title-input" name="title" type="text" placeholder="Empalot -> Roc" required>
-          </label>
-
-          <label class="field">
-            <span>Origin</span>
-            <input id="route-origin-input" name="origin" type="text" placeholder="Empalot, Toulouse" required>
-          </label>
-
-          <label class="field">
-            <span>Destination</span>
-            <input id="route-destination-input" name="destination" type="text" placeholder="Roc, Toulouse" required>
-          </label>
-
-          <div class="mode-pill">Mode locked to BUS</div>
-
-          <div class="button-row">
-            <button type="submit" class="button primary">Save route</button>
-            <button id="cancel-edit-button" type="button" class="button ghost hidden">Cancel edit</button>
-          </div>
-        </form>
-      </section>
-    </main>
-
-    <section class="panel routes-panel">
-      <div class="panel-header">
-        <div>
-          <h2>Saved routes</h2>
-          <p class="panel-subtitle">Use this page like a lightweight widget, or add it to the iPhone home screen.</p>
-        </div>
-        <span id="route-count-badge" class="badge muted">0 routes</span>
+  <template id="route-row-template">
+    <article class="route-row">
+      <div class="route-meta">
+        <h2 class="route-title"></h2>
+        <p class="route-duration">--</p>
       </div>
-
-      <div id="empty-state" class="empty-state">
-        <h3>No routes yet</h3>
-        <p>Add your first favorite route above, then refresh it.</p>
-      </div>
-
-      <div id="routes-grid" class="routes-grid"></div>
-    </section>
-  </div>
-
-  <dialog id="install-help-dialog">
-    <div class="dialog-content">
-      <h2>Add to iPhone Home Screen</h2>
-      <ol>
-        <li>Open this site in Safari on your iPhone.</li>
-        <li>Tap the Share button.</li>
-        <li>Tap <strong>Add to Home Screen</strong>.</li>
-        <li>Tap <strong>Add</strong>.</li>
-      </ol>
-      <p>The web app can then behave like a lightweight home-screen route dashboard.</p>
-      <button id="close-install-help-button" class="button primary">Close</button>
-    </div>
-  </dialog>
-
-  <template id="route-card-template">
-    <article class="route-card">
-      <div class="route-card-top">
-        <div>
-          <h3 class="route-title"></h3>
-          <p class="route-places"></p>
-        </div>
-        <span class="badge route-status-badge"></span>
-      </div>
-
-      <div class="metrics">
-        <div class="metric">
-          <span class="metric-label">Duration</span>
-          <strong class="metric-duration">--</strong>
-        </div>
-        <div class="metric">
-          <span class="metric-label">Distance</span>
-          <strong class="metric-distance">--</strong>
-        </div>
-        <div class="metric">
-          <span class="metric-label">Transfers</span>
-          <strong class="metric-transfers">--</strong>
-        </div>
-      </div>
-
-      <p class="route-lines text-line hidden"></p>
-      <p class="route-stops text-line hidden"></p>
-      <p class="route-note text-line hidden"></p>
-      <p class="route-error text-line hidden"></p>
-      <p class="route-updated"></p>
-
-      <div class="button-row route-actions">
-        <button class="button secondary card-refresh-button" type="button">Refresh</button>
-        <button class="button ghost card-edit-button" type="button">Edit</button>
-        <button class="button ghost card-delete-button" type="button">Delete</button>
-        <a class="button primary card-open-link" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
-      </div>
+      <button class="button route-refresh-button" type="button">Update</button>
     </article>
   </template>
 

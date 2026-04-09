@@ -1,46 +1,30 @@
 # BusRouteWidget Web
 
-BusRouteWidget Web is a static website version of the bus route checker.
+Minimal web version of the bus route checker.
 
-It is designed to work with:
+## UI
 
-- GitHub Pages for free hosting
-- Safari on iPhone
-- Add to Home Screen on iPhone
-- Google Routes API as the live data source
+- fixed routes
+- one duration value per route
+- one update button per route
+- one global `Update all` button
 
-## What it does
+## API key behavior
 
-- saves favorite routes in browser local storage
-- stores your Google API key only in your browser local storage
-- fetches routes from Google Routes API `computeRoutes`
-- requests transit routing with bus-only preference
-- accepts walking segments
-- rejects non-bus transit segments after validating returned route steps
-- supports manual refresh and auto-refresh while the page is open
-- opens the route in Google Maps with a transit directions URL
+The Google Routes API key is not committed into the public repo.
 
-## Important limitation
+Instead:
 
-GitHub Pages is static hosting, so this is not server-side real-time.
+- the site prompts for it on first load
+- it stores the key only in the browser local storage
 
-In this project, "real time" means:
+## Hosting
 
-- the page fetches the latest Google route data live from the browser
-- auto-refresh works while the page is open
-- when installed on the iPhone home screen, it behaves like a lightweight web app
+Hosted on GitHub Pages.
 
-## Google API setup
+## Notes
 
-1. Create or choose a Google Cloud project.
-2. Enable billing.
-3. Enable `Routes API`.
-4. Create an API key.
-5. Restrict the key to your GitHub Pages domain if possible.
-
-## Official Google docs
-
-- [Routes API](https://developers.google.com/maps/documentation/routes)
-- [Compute Routes](https://developers.google.com/maps/documentation/routes/reference/rest/v2/TopLevel/computeRoutes)
-- [Transit Preferences](https://developers.google.com/maps/documentation/routes/reference/rest/v2/TransitPreferences)
-- [Maps URLs](https://developers.google.com/maps/documentation/urls/guide)
+- requests use Google Routes API `computeRoutes`
+- transit preference is set to `BUS`
+- walking is allowed
+- non-bus transit segments are rejected
